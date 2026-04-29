@@ -1,0 +1,10 @@
+# .github/metadata.yaml
+# Triaged by AI-assisted bulk pass (2026-04-29).
+description: "Swift implementation of W3C Portable Network Graphics (PNG)."
+topics:
+  - standards
+  - w3c
+  - png
+  - image-format
+  - graphics
+homepage: "https://swift-institute.org"
