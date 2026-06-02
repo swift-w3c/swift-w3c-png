@@ -16,8 +16,8 @@ let package = Package(
         .library(name: "W3C PNG", targets: ["W3C PNG"])
     ],
     dependencies: [
-        .package(path: "../../swift-primitives/swift-standard-library-extensions"),
-        .package(path: "../../swift-ietf/swift-rfc-1950")
+        .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
+        .package(url: "https://github.com/swift-ietf/swift-rfc-1950.git", branch: "main")
     ],
     targets: [
         .target(
