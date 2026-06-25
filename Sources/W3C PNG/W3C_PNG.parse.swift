@@ -120,7 +120,7 @@ extension W3C_PNG {
         let colorTypeRaw = data[9].underlying
 
         guard let colorType = ColorType(rawValue: colorTypeRaw) else {
-            throw .unsupportedColorType(colorTypeRaw)
+            throw .unsupportedColorType(data[9])
         }
 
         // Validate bit depth for color type
@@ -205,7 +205,7 @@ extension W3C_PNG {
             let filterByte = data[scanlineStart].underlying
 
             guard let filterType = FilterType(rawValue: filterByte) else {
-                throw .invalidFilter(filterByte)
+                throw .invalidFilter(data[scanlineStart])
             }
 
             let rawScanline = Array(data[(scanlineStart + 1)..<(scanlineStart + scanlineWithFilter)])

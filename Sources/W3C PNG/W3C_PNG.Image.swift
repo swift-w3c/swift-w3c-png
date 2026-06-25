@@ -120,7 +120,7 @@ extension W3C_PNG {
         case invalidIHDR
 
         /// Unsupported color type
-        case unsupportedColorType(UInt8)
+        case unsupportedColorType(Byte)
 
         /// Unsupported bit depth for color type
         case unsupportedBitDepth(Int)
@@ -132,7 +132,7 @@ extension W3C_PNG {
         case decompressionFailed
 
         /// Invalid filter type in scanline
-        case invalidFilter(UInt8)
+        case invalidFilter(Byte)
 
         /// Image data does not match expected size
         case invalidDataSize
