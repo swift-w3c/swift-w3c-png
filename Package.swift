@@ -18,6 +18,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
         .package(url: "https://github.com/swift-ietf/swift-rfc-1950.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-binary-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main")
     ],
     targets: [
@@ -26,6 +27,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
                 .product(name: "RFC 1950", package: "swift-rfc-1950"),
+                .product(name: "Binary Primitives Standard Library Integration", package: "swift-binary-primitives"),
                 .product(name: "Byte Primitives", package: "swift-byte-primitives"),
                 .product(name: "Byte Primitives Standard Library Integration", package: "swift-byte-primitives")
             ]

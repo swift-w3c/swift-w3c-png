@@ -2,6 +2,7 @@
 
 public import Byte_Primitives
 internal import Byte_Primitives_Standard_Library_Integration
+internal import Binary_Primitives_Standard_Library_Integration
 
 extension W3C_PNG {
     /// PNG file signature (8 bytes)
@@ -286,9 +287,6 @@ extension W3C_PNG {
 extension W3C_PNG {
     /// Read big-endian UInt32
     private static func readUInt32BE(_ data: [Byte], at offset: Int) -> UInt32 {
-        UInt32(data[offset]) << 24 |
-        UInt32(data[offset + 1]) << 16 |
-        UInt32(data[offset + 2]) << 8 |
-        UInt32(data[offset + 3])
+        UInt32(bytes: data[offset..<offset + 4], endianness: .big)!
     }
 }
