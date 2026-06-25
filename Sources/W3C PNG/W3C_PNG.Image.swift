@@ -1,5 +1,7 @@
 // W3C_PNG.Image.swift
 
+public import Byte_Primitives
+
 extension W3C_PNG {
     /// A decoded PNG image
     ///
@@ -31,7 +33,7 @@ extension W3C_PNG {
         ///
         /// For indexed-color images, this contains palette indices.
         /// Use `palette` to map indices to RGB colors.
-        public let rawPixels: [UInt8]
+        public let rawPixels: [Byte]
 
         /// Color palette for indexed-color images
         ///
@@ -44,7 +46,7 @@ extension W3C_PNG {
             height: Int,
             colorType: ColorType,
             bitDepth: Int,
-            rawPixels: [UInt8],
+            rawPixels: [Byte],
             palette: [PaletteEntry]? = nil
         ) {
             self.width = width
@@ -60,11 +62,11 @@ extension W3C_PNG {
 extension W3C_PNG {
     /// A single palette entry (RGB color)
     public struct PaletteEntry: Sendable, Hashable {
-        public let r: UInt8
-        public let g: UInt8
-        public let b: UInt8
+        public let r: Byte
+        public let g: Byte
+        public let b: Byte
 
-        public init(r: UInt8, g: UInt8, b: UInt8) {
+        public init(r: Byte, g: Byte, b: Byte) {
             self.r = r
             self.g = g
             self.b = b

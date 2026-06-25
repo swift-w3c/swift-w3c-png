@@ -1,13 +1,14 @@
 // W3C_PNG_Tests.swift
 
 import Testing
+import Byte_Primitives
 @testable import W3C_PNG
 
 @Suite("W3C PNG Parsing")
 struct W3C_PNG_Tests {
     @Test("Invalid signature throws error")
     func invalidSignature() throws {
-        let invalidData: [UInt8] = [0x00, 0x00, 0x00, 0x00]
+        let invalidData: [Byte] = [0x00, 0x00, 0x00, 0x00]
         #expect(throws: W3C_PNG.ParseError.invalidSignature) {
             try W3C_PNG.parse(invalidData)
         }
@@ -16,7 +17,7 @@ struct W3C_PNG_Tests {
     @Test("Missing IHDR throws error")
     func missingIHDR() throws {
         // Valid signature but no IHDR
-        let data: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+        let data: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
         #expect(throws: W3C_PNG.ParseError.missingIHDR) {
             try W3C_PNG.parse(data)
         }

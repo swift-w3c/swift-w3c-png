@@ -1,8 +1,11 @@
 // W3C_PNG.parse.swift
 
+public import Byte_Primitives
+internal import Byte_Primitives_Standard_Library_Integration
+
 extension W3C_PNG {
     /// PNG file signature (8 bytes)
-    private static let signature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+    private static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
     /// Parse PNG data into an Image
     ///
@@ -12,7 +15,7 @@ extension W3C_PNG {
     /// - Parameter data: Raw PNG file bytes
     /// - Returns: Decoded image with raw pixel data
     /// - Throws: `ParseError` if the data is invalid
-    public static func parse(_ data: [UInt8]) throws(ParseError) -> Image {
+    public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
         // Verify signature
         guard data.count >= 8,
               data[0..<8].elementsEqual(signature) else {
@@ -21,7 +24,7 @@ extension W3C_PNG {
 
         var offset = 8
         var ihdr: IHDR?
-        var idatData: [UInt8] = []
+        var idatData: [Byte] = []
         var palette: [PaletteEntry]?
 
         // Parse chunks
@@ -68,7 +71,7 @@ extension W3C_PNG {
         }
 
         // Decompress IDAT data using RFC 1950 (ZLIB)
-        var decompressed: [UInt8] = []
+        var decompressed: [Byte] = []
         do {
             try RFC_1950.decompress(idatData, into: &decompressed)
         } catch {
@@ -106,7 +109,7 @@ extension W3C_PNG {
         let colorType: ColorType
     }
 
-    private static func parseIHDR(_ data: [UInt8]) throws(ParseError) -> IHDR {
+    private static func parseIHDR(_ data: [Byte]) throws(ParseError) -> IHDR {
         guard data.count >= 13 else {
             throw .invalidIHDR
         }
@@ -114,7 +117,7 @@ extension W3C_PNG {
         let width = Int(readUInt32BE(data, at: 0))
         let height = Int(readUInt32BE(data, at: 4))
         let bitDepth = Int(data[8])
-        let colorTypeRaw = data[9]
+        let colorTypeRaw = data[9].underlying
 
         guard let colorType = ColorType(rawValue: colorTypeRaw) else {
             throw .unsupportedColorType(colorTypeRaw)
@@ -147,7 +150,7 @@ extension W3C_PNG {
 // MARK: - PLTE Parsing
 
 extension W3C_PNG {
-    private static func parsePLTE(_ data: [UInt8]) throws(ParseError) -> [PaletteEntry] {
+    private static func parsePLTE(_ data: [Byte]) throws(ParseError) -> [PaletteEntry] {
         guard data.count % 3 == 0 && data.count >= 3 && data.count <= 768 else {
             throw .invalidPalette
         }
@@ -176,12 +179,12 @@ extension W3C_PNG {
     }
 
     private static func reverseFilters(
-        _ data: [UInt8],
+        _ data: [Byte],
         width: Int,
         height: Int,
         colorType: ColorType,
         bitDepth: Int
-    ) throws(ParseError) -> [UInt8] {
+    ) throws(ParseError) -> [Byte] {
         let channels = colorType.channels
         let bitsPerPixel = channels * bitDepth
         let bytesPerPixel = (bitsPerPixel + 7) / 8
@@ -192,14 +195,14 @@ extension W3C_PNG {
             throw .invalidDataSize
         }
 
-        var result: [UInt8] = []
+        var result: [Byte] = []
         result.reserveCapacity(height * scanlineBytes)
 
-        var previousScanline: [UInt8] = Array(repeating: 0, count: scanlineBytes)
+        var previousScanline: [Byte] = Array(repeating: 0, count: scanlineBytes)
 
         for y in 0..<height {
             let scanlineStart = y * scanlineWithFilter
-            let filterByte = data[scanlineStart]
+            let filterByte = data[scanlineStart].underlying
 
             guard let filterType = FilterType(rawValue: filterByte) else {
                 throw .invalidFilter(filterByte)
@@ -222,10 +225,10 @@ extension W3C_PNG {
 
     private static func applyReverseFilter(
         _ filter: FilterType,
-        scanline: [UInt8],
-        previous: [UInt8],
+        scanline: [Byte],
+        previous: [Byte],
         bytesPerPixel: Int
-    ) -> [UInt8] {
+    ) -> [Byte] {
         var result = scanline
 
         switch filter {
@@ -234,19 +237,19 @@ extension W3C_PNG {
 
         case .sub:
             for i in bytesPerPixel..<result.count {
-                result[i] = result[i] &+ result[i - bytesPerPixel]
+                result[i] = Byte(result[i].underlying &+ result[i - bytesPerPixel].underlying)
             }
 
         case .up:
             for i in 0..<result.count {
-                result[i] = result[i] &+ previous[i]
+                result[i] = Byte(result[i].underlying &+ previous[i].underlying)
             }
 
         case .average:
             for i in 0..<result.count {
                 let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
                 let b = Int(previous[i])
-                result[i] = result[i] &+ UInt8((a + b) / 2)
+                result[i] = Byte(result[i].underlying &+ UInt8((a + b) / 2))
             }
 
         case .paeth:
@@ -254,7 +257,7 @@ extension W3C_PNG {
                 let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
                 let b = Int(previous[i])
                 let c = i >= bytesPerPixel ? Int(previous[i - bytesPerPixel]) : 0
-                result[i] = result[i] &+ UInt8(paethPredictor(a, b, c))
+                result[i] = Byte(result[i].underlying &+ UInt8(paethPredictor(a, b, c)))
             }
         }
 
@@ -282,7 +285,7 @@ extension W3C_PNG {
 
 extension W3C_PNG {
     /// Read big-endian UInt32
-    private static func readUInt32BE(_ data: [UInt8], at offset: Int) -> UInt32 {
+    private static func readUInt32BE(_ data: [Byte], at offset: Int) -> UInt32 {
         UInt32(data[offset]) << 24 |
         UInt32(data[offset + 1]) << 16 |
         UInt32(data[offset + 2]) << 8 |
