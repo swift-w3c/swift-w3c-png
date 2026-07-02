@@ -1,6 +1,6 @@
 # .github/metadata.yaml
 # Triaged by AI-assisted bulk pass (2026-04-29).
-description: "Swift implementation of W3C Portable Network Graphics (PNG)."
+description: "Swift implementation of W3C Portable Network Graphics (PNG) Specification (Second Edition)."
 topics:
   - standards
   - w3c
