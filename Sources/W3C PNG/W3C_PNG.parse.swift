@@ -1,9 +1,9 @@
 // W3C_PNG.parse.swift
 
+internal import Binary_Endianness_Primitives
+internal import Binary_Primitives_Standard_Library_Integration
 public import Byte_Primitives
 internal import Byte_Primitives_Standard_Library_Integration
-internal import Binary_Primitives_Standard_Library_Integration
-internal import Binary_Endianness_Primitives
 
 extension W3C_PNG {
     /// PNG file signature (8 bytes)
@@ -20,7 +20,8 @@ extension W3C_PNG {
     public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
         // Verify signature
         guard data.count >= 8,
-              data[0..<8].elementsEqual(signature) else {
+            data[0..<8].elementsEqual(signature)
+        else {
             throw .invalidSignature
         }
 

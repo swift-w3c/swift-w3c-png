@@ -1,7 +1,8 @@
 // W3C_PNG_Tests.swift
 
-import Testing
 import Byte_Primitives
+import Testing
+
 @testable import W3C_PNG
 
 @Suite("W3C PNG Parsing")

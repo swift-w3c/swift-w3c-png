@@ -10,7 +10,7 @@
 /// ## Key Types
 ///
 /// - ``Image``: Decoded PNG image with raw pixel data
-/// - ``ColorType``: Image color type (grayscale, RGB, etc.)
+/// - ``ColorType``: Image color type, such as grayscale or RGB
 ///
 /// ## Example
 ///
