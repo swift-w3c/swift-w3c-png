@@ -75,7 +75,7 @@ extension W3C_PNG {
 
         // Decompress IDAT data using RFC 1950 (ZLIB)
         var decompressed: [Byte] = []
-        do {
+        do throws(RFC_1950.Error) {
             try RFC_1950.decompress(idatData, into: &decompressed)
         } catch {
             throw .decompressionFailed
@@ -172,14 +172,6 @@ extension W3C_PNG {
 // MARK: - Filter Reversal
 
 extension W3C_PNG {
-    /// PNG filter types
-    private enum FilterType: UInt8 {
-        case none = 0
-        case sub = 1
-        case up = 2
-        case average = 3
-        case paeth = 4
-    }
 
     private static func reverseFilters(
         _ data: [Byte],
@@ -203,6 +195,8 @@ extension W3C_PNG {
 
         var previousScanline: [Byte] = Array(repeating: 0, count: scanlineBytes)
 
+        // swift-linter:disable:next counter loop iteration
+        // REASON: loop body throws typed(ParseError); stdlib `forEach` is an untyped rethrows shim that would erase throws(ParseError) to `any Error` ([IMPL-109]). Left as a counter loop per the typed-throws-preserving exception.
         for y in 0..<height {
             let scanlineStart = y * scanlineWithFilter
             let filterByte = data[scanlineStart].underlying
@@ -239,24 +233,24 @@ extension W3C_PNG {
             break
 
         case .sub:
-            for i in bytesPerPixel..<result.count {
+            (bytesPerPixel..<result.count).forEach { i in
                 result[i] = Byte(result[i].underlying &+ result[i - bytesPerPixel].underlying)
             }
 
         case .up:
-            for i in 0..<result.count {
+            result.indices.forEach { i in
                 result[i] = Byte(result[i].underlying &+ previous[i].underlying)
             }
 
         case .average:
-            for i in 0..<result.count {
+            result.indices.forEach { i in
                 let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
                 let b = Int(previous[i])
                 result[i] = Byte(result[i].underlying &+ UInt8((a + b) / 2))
             }
 
         case .paeth:
-            for i in 0..<result.count {
+            result.indices.forEach { i in
                 let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
                 let b = Int(previous[i])
                 let c = i >= bytesPerPixel ? Int(previous[i - bytesPerPixel]) : 0
