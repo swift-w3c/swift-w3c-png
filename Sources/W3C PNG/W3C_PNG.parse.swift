@@ -131,8 +131,10 @@ extension W3C_PNG {
         switch colorType {
         case .grayscale:
             validBitDepths = [1, 2, 4, 8, 16]
+
         case .rgb, .grayscaleAlpha, .rgba:
             validBitDepths = [8, 16]
+
         case .indexed:
             validBitDepths = [1, 2, 4, 8]
         }
@@ -205,7 +207,9 @@ extension W3C_PNG {
                 throw .invalidFilter(data[scanlineStart])
             }
 
-            let rawScanline = Array(data[(scanlineStart + 1)..<(scanlineStart + scanlineWithFilter)])
+            let rawScanline = Array(
+                data[(scanlineStart + 1)..<(scanlineStart + scanlineWithFilter)]
+            )
             let filteredScanline = applyReverseFilter(
                 filterType,
                 scanline: rawScanline,

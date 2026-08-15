@@ -58,4 +58,3 @@ extension W3C_PNG {
         }
     }
 }
-
