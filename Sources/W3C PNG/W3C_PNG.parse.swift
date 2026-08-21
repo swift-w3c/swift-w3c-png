@@ -1,24 +1,14 @@
-// W3C_PNG.parse.swift
-
 internal import Binary_Endianness_Primitives
 internal import Binary_Primitives_Standard_Library_Integration
 public import Byte_Primitives
 internal import Byte_Primitives_Standard_Library_Integration
 
 extension W3C_PNG {
-    /// PNG file signature (8 bytes)
+
     private static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
-    /// Parse PNG data into an Image
-    ///
-    /// Validates the PNG signature, parses chunks, decompresses IDAT data,
-    /// and applies filter reversal to produce raw pixel data.
-    ///
-    /// - Parameter data: Raw PNG file bytes
-    /// - Returns: Decoded image with raw pixel data
-    /// - Throws: `ParseError` if the data is invalid
     public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
-        // Verify signature
+
         guard data.count >= 8,
             data[0..<8].elementsEqual(signature)
         else {
@@ -30,7 +20,6 @@ extension W3C_PNG {
         var idatData: [Byte] = []
         var palette: [PaletteEntry]?
 
-        // Parse chunks
         while offset + 12 <= data.count {
             let length = Int(readUInt32BE(data, at: offset))
             let chunkType = String(decoding: data[(offset + 4)..<(offset + 8)], as: UTF8.self)
@@ -53,11 +42,11 @@ extension W3C_PNG {
                 break
 
             default:
-                // Skip unknown chunks
+
                 break
             }
 
-            offset = chunkDataEnd + 4  // Skip CRC
+            offset = chunkDataEnd + 4
         }
 
         guard let header = ihdr else {
@@ -68,12 +57,10 @@ extension W3C_PNG {
             throw .missingIDAT
         }
 
-        // Check for required palette
         if header.colorType == .indexed && palette == nil {
             throw .missingPalette
         }
 
-        // Decompress IDAT data using RFC 1950 (ZLIB)
         var decompressed: [Byte] = []
         do throws(RFC_1950.Error) {
             try RFC_1950.decompress(idatData, into: &decompressed)
@@ -81,7 +68,6 @@ extension W3C_PNG {
             throw .decompressionFailed
         }
 
-        // Apply filter reversal
         let rawPixels = try reverseFilters(
             decompressed,
             width: header.width,
@@ -101,10 +87,8 @@ extension W3C_PNG {
     }
 }
 
-// MARK: - IHDR Parsing
-
 extension W3C_PNG {
-    /// IHDR chunk data
+
     private struct IHDR {
         let width: Int
         let height: Int
@@ -126,7 +110,6 @@ extension W3C_PNG {
             throw .unsupportedColorType(data[9])
         }
 
-        // Validate bit depth for color type
         let validBitDepths: [Int]
         switch colorType {
         case .grayscale:
@@ -152,8 +135,6 @@ extension W3C_PNG {
     }
 }
 
-// MARK: - PLTE Parsing
-
 extension W3C_PNG {
     private static func parsePLTE(_ data: [Byte]) throws(ParseError) -> [PaletteEntry] {
         guard data.count % 3 == 0 && data.count >= 3 && data.count <= 768 else {
@@ -171,8 +152,6 @@ extension W3C_PNG {
     }
 }
 
-// MARK: - Filter Reversal
-
 extension W3C_PNG {
 
     private static func reverseFilters(
@@ -186,7 +165,7 @@ extension W3C_PNG {
         let bitsPerPixel = channels * bitDepth
         let bytesPerPixel = (bitsPerPixel + 7) / 8
         let scanlineBytes = (width * bitsPerPixel + 7) / 8
-        let scanlineWithFilter = scanlineBytes + 1  // +1 for filter byte
+        let scanlineWithFilter = scanlineBytes + 1
 
         guard data.count >= height * scanlineWithFilter else {
             throw .invalidDataSize
@@ -197,8 +176,6 @@ extension W3C_PNG {
 
         var previousScanline: [Byte] = Array(repeating: 0, count: scanlineBytes)
 
-        // swift-linter:disable:next counter loop iteration
-        // REASON: loop body throws typed(ParseError); stdlib `forEach` is an untyped rethrows shim that would erase throws(ParseError) to `any Error` ([IMPL-109]). Left as a counter loop per the typed-throws-preserving exception.
         for y in 0..<height {
             let scanlineStart = y * scanlineWithFilter
             let filterByte = data[scanlineStart].underlying
@@ -265,7 +242,6 @@ extension W3C_PNG {
         return result
     }
 
-    /// Paeth predictor function (PNG spec section 9.4)
     private static func paethPredictor(_ a: Int, _ b: Int, _ c: Int) -> Int {
         let p = a + b - c
         let pa = abs(p - a)
@@ -282,10 +258,8 @@ extension W3C_PNG {
     }
 }
 
-// MARK: - Utility
-
 extension W3C_PNG {
-    /// Read big-endian UInt32
+
     private static func readUInt32BE(_ data: [Byte], at offset: Int) -> UInt32 {
         UInt32(bytes: data[offset..<offset + 4], endianness: .big)!
     }

@@ -1,5 +1,5 @@
 extension W3C_PNG {
-    /// PNG filter types
+
     enum FilterType: UInt8 {
         case none = 0
         case sub = 1

@@ -1,7 +1,7 @@
 public import Byte_Primitives
 
 extension W3C_PNG {
-    /// A single palette entry (RGB color)
+
     public struct PaletteEntry: Sendable, Hashable {
         public let r: Byte
         public let g: Byte

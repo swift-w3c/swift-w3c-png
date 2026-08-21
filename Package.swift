@@ -2,7 +2,6 @@
 
 import PackageDescription
 
-// W3C PNG: Portable Network Graphics (Second Edition)
 let package = Package(
     name: "swift-w3c-png",
     platforms: [
