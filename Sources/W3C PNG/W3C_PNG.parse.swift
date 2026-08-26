@@ -1,7 +1,7 @@
 internal import Binary_Endianness_Primitives
-internal import Binary_Primitives_Standard_Library_Integration
-public import Byte_Primitives
-internal import Byte_Primitives_Standard_Library_Integration
+internal import Binary_Standard_Library_Integration
+public import Byte
+internal import Byte_Standard_Library_Integration
 
 extension W3C_PNG {
 

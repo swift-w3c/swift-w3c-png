@@ -16,16 +16,16 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/swift-primitives/swift-standard-library-extensions.git",
+            url: "https://github.com/swift-molecules/swift-standard-library-extensions.git",
             branch: "main"
         ),
         .package(url: "https://github.com/swift-ietf/swift-rfc-1950.git", branch: "main"),
         .package(
-            url: "https://github.com/swift-primitives/swift-binary-primitives.git",
+            url: "https://github.com/swift-molecules/swift-binary.git",
             branch: "main"
         ),
         .package(
-            url: "https://github.com/swift-primitives/swift-byte-primitives.git",
+            url: "https://github.com/swift-molecules/swift-byte.git",
             branch: "main"
         ),
     ],
@@ -39,13 +39,13 @@ let package = Package(
                 ),
                 .product(name: "RFC 1950", package: "swift-rfc-1950"),
                 .product(
-                    name: "Binary Primitives Standard Library Integration",
-                    package: "swift-binary-primitives"
+                    name: "Binary Standard Library Integration",
+                    package: "swift-binary"
                 ),
-                .product(name: "Byte Primitives", package: "swift-byte-primitives"),
+                .product(name: "Byte", package: "swift-byte"),
                 .product(
-                    name: "Byte Primitives Standard Library Integration",
-                    package: "swift-byte-primitives"
+                    name: "Byte Standard Library Integration",
+                    package: "swift-byte"
                 ),
             ]
         ),
@@ -53,10 +53,10 @@ let package = Package(
             name: "W3C PNG Tests",
             dependencies: [
                 "W3C PNG",
-                .product(name: "Byte Primitives", package: "swift-byte-primitives"),
+                .product(name: "Byte", package: "swift-byte"),
                 .product(
-                    name: "Byte Primitives Standard Library Integration",
-                    package: "swift-byte-primitives"
+                    name: "Byte Standard Library Integration",
+                    package: "swift-byte"
                 ),
             ]
         ),
