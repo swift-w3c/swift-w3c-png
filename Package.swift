@@ -52,7 +52,7 @@ let package = Package(
         .testTarget(
             name: "W3C PNG Tests",
             dependencies: [
-                "W3C PNG",
+                .target(name: "W3C PNG"),
                 .product(name: "Byte", package: "swift-byte"),
                 .product(
                     name: "Byte Standard Library Integration",
@@ -63,10 +63,6 @@ let package = Package(
     ],
     swiftLanguageModes: [.v6]
 )
-
-extension String {
-    var tests: Self { self + " Tests" }
-}
 
 for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
     let ecosystem: [SwiftSetting] = [
