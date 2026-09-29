@@ -11,7 +11,7 @@ struct W3C_PNG_Tests {
 
     @Test
     func `invalid signature throws error`() throws {
-        let invalidData: [Byte] = [0x00, 0x00, 0x00, 0x00]
+        let invalidData = [Byte](repeating: Byte(0x00), count: 4)
         #expect(throws: W3C_PNG.ParseError.invalidSignature) {
             try W3C_PNG.parse(invalidData)
         }
@@ -20,7 +20,7 @@ struct W3C_PNG_Tests {
     @Test
     func `missing IHDR throws error`() throws {
 
-        let data: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+        let data: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].map(Byte.init(bitPattern:))
         #expect(throws: W3C_PNG.ParseError.missingIHDR) {
             try W3C_PNG.parse(data)
         }

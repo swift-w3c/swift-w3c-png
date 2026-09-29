@@ -4,7 +4,7 @@ internal import Byte
 
 extension W3C_PNG {
 
-    private static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+    private static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].map(Byte.init(bitPattern:))
 
     public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
 
@@ -102,7 +102,7 @@ extension W3C_PNG {
 
         let width = Int(readUInt32BE(data, at: 0))
         let height = Int(readUInt32BE(data, at: 4))
-        let bitDepth = Int(data[8])
+        let bitDepth = Int(data[8].underlying)
         let colorTypeRaw = data[9].underlying
 
         guard let colorType = ColorType(rawValue: colorTypeRaw) else {
@@ -173,7 +173,7 @@ extension W3C_PNG {
         var result: [Byte] = []
         result.reserveCapacity(height * scanlineBytes)
 
-        var previousScanline: [Byte] = Array(repeating: 0, count: scanlineBytes)
+        var previousScanline = [Byte](repeating: Byte(0), count: scanlineBytes)
 
         for y in 0..<height {
             let scanlineStart = y * scanlineWithFilter
@@ -224,16 +224,16 @@ extension W3C_PNG {
 
         case .average:
             result.indices.forEach { i in
-                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
-                let b = Int(previous[i])
+                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel].underlying) : 0
+                let b = Int(previous[i].underlying)
                 result[i] = Byte(result[i].underlying &+ UInt8((a + b) / 2))
             }
 
         case .paeth:
             result.indices.forEach { i in
-                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel]) : 0
-                let b = Int(previous[i])
-                let c = i >= bytesPerPixel ? Int(previous[i - bytesPerPixel]) : 0
+                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel].underlying) : 0
+                let b = Int(previous[i].underlying)
+                let c = i >= bytesPerPixel ? Int(previous[i - bytesPerPixel].underlying) : 0
                 result[i] = Byte(result[i].underlying &+ UInt8(paethPredictor(a, b, c)))
             }
         }
