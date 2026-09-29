@@ -1,4 +1,3 @@
-internal import Binary_Endianness_Primitives
 internal import Binary
 public import Byte
 internal import Byte
