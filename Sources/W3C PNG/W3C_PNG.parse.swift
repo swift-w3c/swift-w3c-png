@@ -102,6 +102,9 @@ extension W3C_PNG {
 
         let width = Int(readUInt32BE(data, at: 0))
         let height = Int(readUInt32BE(data, at: 4))
+        guard (1...Int(Int32.max)).contains(width), (1...Int(Int32.max)).contains(height) else {
+            throw .invalidIHDR
+        }
         let bitDepth = Int(data[8].underlying)
         let colorTypeRaw = data[9].underlying
 
@@ -163,10 +166,13 @@ extension W3C_PNG {
         let channels = colorType.channels
         let bitsPerPixel = channels * bitDepth
         let bytesPerPixel = (bitsPerPixel + 7) / 8
-        let scanlineBytes = (width * bitsPerPixel + 7) / 8
+        let bitsPerScanline = width.multipliedReportingOverflow(by: bitsPerPixel)
+        guard !bitsPerScanline.overflow else { throw .invalidDataSize }
+        let scanlineBytes = (bitsPerScanline.partialValue + 7) / 8
         let scanlineWithFilter = scanlineBytes + 1
 
-        guard data.count >= height * scanlineWithFilter else {
+        let required = height.multipliedReportingOverflow(by: scanlineWithFilter)
+        guard !required.overflow, data.count >= required.partialValue else {
             throw .invalidDataSize
         }
 
