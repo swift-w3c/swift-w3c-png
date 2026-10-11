@@ -27,6 +27,10 @@ extension W3C_PNG {
 
             guard chunkDataEnd + 4 <= data.count else { break }
 
+            guard CRC.checksum(data[(offset + 4)..<chunkDataEnd]) == readUInt32BE(data, at: chunkDataEnd) else {
+                throw .crcMismatch
+            }
+
             switch chunkType {
             case "IHDR":
                 ihdr = try parseIHDR(Array(data[chunkDataStart..<chunkDataEnd]))

@@ -10,7 +10,8 @@ struct `PNG header boundaries` {
     }
 
     private static func chunk(_ type: String, _ data: [UInt8]) -> [UInt8] {
-        be32(UInt32(data.count)) + Array(type.utf8) + data + [0, 0, 0, 0]
+        let body = Array(type.utf8) + data
+        return be32(UInt32(data.count)) + body + be32(W3C_PNG.CRC.checksum(body.map(Byte.init(bitPattern:))))
     }
 
     private static func png(width: UInt32, height: UInt32, bitDepth: UInt8 = 8, colorType: UInt8 = 0) -> [Byte] {
