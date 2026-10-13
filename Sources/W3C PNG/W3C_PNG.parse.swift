@@ -1,6 +1,5 @@
 internal import Binary
 public import Byte
-internal import Byte
 
 extension W3C_PNG {
 

@@ -9,11 +9,14 @@ extension W3C_PNG {
                 c & 1 != 0 ? 0xEDB8_8320 ^ (c >> 1) : c >> 1
             }
         }
+    }
+}
 
-        internal static func checksum(_ bytes: some Sequence<Byte>) -> UInt32 {
-            bytes.reduce(UInt32(0xFFFF_FFFF)) { c, byte in
-                table[Int((c ^ UInt32(byte.underlying)) & 0xFF)] ^ (c >> 8)
-            } ^ 0xFFFF_FFFF
-        }
+extension W3C_PNG.CRC {
+
+    internal static func checksum(_ bytes: some Sequence<Byte>) -> UInt32 {
+        bytes.reduce(UInt32(0xFFFF_FFFF)) { c, byte in
+            table[Int((c ^ UInt32(byte.underlying)) & 0xFF)] ^ (c >> 8)
+        } ^ 0xFFFF_FFFF
     }
 }

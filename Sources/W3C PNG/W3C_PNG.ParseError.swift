@@ -2,7 +2,7 @@ public import Byte
 
 extension W3C_PNG {
 
-    public enum ParseError: Swift.Error, Sendable, Hashable {
+    public enum ParseError: Swift::Error, Sendable, Hashable {
 
         case invalidSignature
 
