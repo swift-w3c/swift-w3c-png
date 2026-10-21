@@ -269,6 +269,9 @@ extension W3C_PNG {
 extension W3C_PNG {
 
     private static func readUInt32BE(_ data: [Byte], at offset: Int) -> UInt32 {
-        UInt32(bytes: data[offset..<offset + 4], endianness: .big)!
+        guard let value = UInt32(bytes: data[offset..<offset + 4], endianness: .big) else {
+            preconditionFailure("A four-byte slice always decodes as UInt32")
+        }
+        return value
     }
 }
