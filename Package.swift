@@ -43,10 +43,6 @@ let package = Package(
                     package: "swift-binary"
                 ),
                 .product(name: "Byte", package: "swift-byte"),
-                .product(
-                    name: "Byte",
-                    package: "swift-byte"
-                ),
             ]
         ),
         .testTarget(
@@ -54,10 +50,6 @@ let package = Package(
             dependencies: [
                 .target(name: "W3C PNG"),
                 .product(name: "Byte", package: "swift-byte"),
-                .product(
-                    name: "Byte",
-                    package: "swift-byte"
-                ),
             ]
         ),
     ],
