@@ -1,74 +1,13 @@
 # swift-w3c-png
 
-![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
+Use this package when you need the pixel data of a PNG file as bytes, for example to embed it elsewhere or convert it yourself. Start from `W3C_PNG.parse(_:)`, which gives a `W3C_PNG.Image`. It reads PNG files only and does not write them.
 
-Decodes W3C Portable Network Graphics (PNG) byte data into raw pixel data, validating the signature, parsing chunks, inflating image data via RFC 1950 (ZLIB), and reversing scanline filters.
+## Laws
 
----
-
-## Key Features
-
-- **Typed decode errors** — `W3C_PNG.parse` throws a typed `W3C_PNG.ParseError`, never an untyped `any Error`.
-- **All five PNG color types** — grayscale, RGB, indexed, grayscale+alpha, and RGBA, exposed through `ColorType`.
-- **Full bit-depth range** — 1, 2, 4, 8, and 16-bit samples, validated against the color type during IHDR parsing.
-- **Scanline filter reversal** — reverses the None, Sub, Up, Average, and Paeth filters to recover raw pixel data.
-- **ZLIB/DEFLATE inflation** — decompresses IDAT chunk data via RFC 1950.
-- **Indexed-color palettes** — parses PLTE chunks into `PaletteEntry` values for index resolution.
-- **Byte-typed pixel data** — pixels are stored as `[Byte]`, distinct from arithmetic `UInt8`.
-
----
-
-## Quick Start
-
-`parse` turns an opaque `[Byte]` stream into a decoded `Image`. The pixel layout depends on the color type: for indexed-color images, `rawPixels` holds palette indices that resolve through `palette`; for direct-color images, each pixel is `colorType.channels` bytes in scanline order.
-
-```swift
-import W3C_PNG
-
-func describe(_ pngBytes: [Byte]) throws(W3C_PNG.ParseError) {
-    let image = try W3C_PNG.parse(pngBytes)
-    print("\(image.width)×\(image.height), bit depth \(image.bitDepth)")
-
-    if image.colorType == .indexed, let palette = image.palette {
-        // rawPixels holds palette indices; resolve them through `palette`.
-        let entry = palette[Int(image.rawPixels[0].underlying)]
-        print("Top-left color:", entry.r.underlying, entry.g.underlying, entry.b.underlying)
-    } else {
-        // Direct color: rawPixels is colorType.channels bytes per pixel.
-        print("Bytes per pixel:", image.colorType.channels)
-    }
-}
-```
-
----
-
-## Installation
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/swift-w3c/swift-w3c-png.git", branch: "main")
-]
-```
-
-```swift
-.target(
-    name: "YourTarget",
-    dependencies: [
-        .product(name: "W3C PNG", package: "swift-w3c-png")
-    ]
-)
-```
-
-Requires Swift 6.2 or later and macOS 26 / iOS 26 / tvOS 26 / watchOS 26 / visionOS 26.
-
----
-
-## Community
-
-<!-- BEGIN: discussion -->
-*Discussion thread will be created at first public release.*
-<!-- END: discussion -->
-
-## License
-
-Apache 2.0. See [LICENSE](LICENSE.md).
+- `W3C_PNG.Image.rawPixels` holds the scanlines after decompression and unfiltering, one row after another with no filter bytes, packed at the file's bit depth and channel layout. Nothing is converted: indexed images keep their palette indices, and samples below 8 bits stay packed.
+- Only the IHDR, PLTE, IDAT and IEND chunks are used. Every other chunk, including transparency, gamma and text chunks, is skipped.
+- Every chunk's CRC is checked, including chunks that are skipped. One wrong byte in a chunk's type, data or CRC fails the whole file with `W3C_PNG.ParseError.crcMismatch`.
+- Width and height must each be between 1 and 2^31 minus 1.
+- Grayscale accepts bit depths 1, 2, 4, 8 and 16. RGB, grayscale with alpha and RGBA accept 8 and 16. Indexed accepts 1, 2, 4 and 8, and needs a PLTE chunk of 1 to 256 entries.
+- Image data shorter than the header requires fails with `W3C_PNG.ParseError.invalidDataSize`, also for sizes that would overflow, rather than trapping.
+- Reading stops at the first chunk that runs past the end of the data. A file that is cut off, or has no IEND, is read up to its last complete chunk.
