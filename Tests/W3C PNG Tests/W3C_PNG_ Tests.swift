@@ -3,8 +3,8 @@ import Testing
 
 @testable import W3C_PNG
 
-@Suite("W3C PNG Parsing")
-struct W3C_PNG_Tests {
+@Suite
+struct `W3C PNG Parsing` {
     @Suite struct Unit {}
     @Suite struct `Edge Case` {}
     @Suite struct Integration {}
