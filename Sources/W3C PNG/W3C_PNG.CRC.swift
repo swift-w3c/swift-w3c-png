@@ -14,7 +14,7 @@ extension W3C_PNG {
 
 extension W3C_PNG.CRC {
 
-    internal static func checksum(_ bytes: some Sequence<Byte>) -> UInt32 {
+    internal static func checksum(_ bytes: some Swift.Sequence<Byte>) -> UInt32 {
         bytes.reduce(UInt32(0xFFFF_FFFF)) { c, byte in
             table[Int((c ^ UInt32(byte.underlying)) & 0xFF)] ^ (c >> 8)
         } ^ 0xFFFF_FFFF
