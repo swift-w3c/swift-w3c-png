@@ -256,12 +256,12 @@ extension W3C_PNG {
         let pb = abs(p - b)
         let pc = abs(p - c)
 
-        if pa <= pb && pa <= pc {
-            return a
+        return if pa <= pb && pa <= pc {
+            a
         } else if pb <= pc {
-            return b
+            b
         } else {
-            return c
+            c
         }
     }
 }
