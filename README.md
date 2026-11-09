@@ -4,7 +4,7 @@ Use this package when you need the pixel data of a PNG file as bytes, for exampl
 
 ## Laws
 
-- `W3C_PNG.Image.rawPixels` holds the scanlines after decompression and unfiltering, one row after another with no filter bytes, packed at the file's bit depth and channel layout. Nothing is converted: indexed images keep their palette indices, and samples below 8 bits stay packed.
+- `W3C_PNG.Image.rawPixels` holds the scanlines after decompression and unfiltering, one row after another with no filter bytes, packed at the file's bit depth and channel layout. Nothing is converted: indexed images keep their palette indices, and samples below 8 bits stay packed. Adam7 interlaced files are de-interlaced into the same row order.
 - Only the IHDR, PLTE, IDAT and IEND chunks are used. Every other chunk, including transparency, gamma and text chunks, is skipped.
 - Every chunk's CRC is checked, including chunks that are skipped. One wrong byte in a chunk's type, data or CRC fails the whole file with `W3C_PNG.ParseError.crcMismatch`.
 - Width and height must each be between 1 and 2^31 minus 1.

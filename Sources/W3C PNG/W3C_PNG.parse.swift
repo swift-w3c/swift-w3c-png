@@ -70,13 +70,24 @@ extension W3C_PNG {
             throw .decompressionFailed
         }
 
-        let rawPixels = try reverseFilters(
-            decompressed,
-            width: header.width,
-            height: header.height,
-            colorType: header.colorType,
-            bitDepth: header.bitDepth
-        )
+        let rawPixels =
+            if header.isInterlaced {
+                try deinterlace(
+                    decompressed,
+                    width: header.width,
+                    height: header.height,
+                    colorType: header.colorType,
+                    bitDepth: header.bitDepth
+                )
+            } else {
+                try reverseFilters(
+                    decompressed,
+                    width: header.width,
+                    height: header.height,
+                    colorType: header.colorType,
+                    bitDepth: header.bitDepth
+                )
+            }
 
         return Image(
             width: header.width,
@@ -96,6 +107,7 @@ extension W3C_PNG {
         let height: Int
         let bitDepth: Int
         let colorType: ColorType
+        let isInterlaced: Bool
     }
 
     private static func parseIHDR(_ data: [Byte]) throws(ParseError) -> IHDR {
@@ -131,11 +143,28 @@ extension W3C_PNG {
             throw .unsupportedBitDepth(bitDepth)
         }
 
+        guard data[10].underlying == 0, data[11].underlying == 0 else {
+            throw .invalidIHDR
+        }
+
+        let isInterlaced: Bool
+        switch data[12].underlying {
+        case 0:
+            isInterlaced = false
+
+        case 1:
+            isInterlaced = true
+
+        default:
+            throw .invalidIHDR
+        }
+
         return IHDR(
             width: width,
             height: height,
             bitDepth: bitDepth,
-            colorType: colorType
+            colorType: colorType,
+            isInterlaced: isInterlaced
         )
     }
 }
@@ -262,6 +291,122 @@ extension W3C_PNG {
             b
         } else {
             c
+        }
+    }
+}
+
+extension W3C_PNG {
+
+    private struct Adam7Pass {
+        let xStart: Int
+        let yStart: Int
+        let xStep: Int
+        let yStep: Int
+    }
+
+    private static let adam7Passes: [Adam7Pass] = [
+        Adam7Pass(xStart: 0, yStart: 0, xStep: 8, yStep: 8),
+        Adam7Pass(xStart: 4, yStart: 0, xStep: 8, yStep: 8),
+        Adam7Pass(xStart: 0, yStart: 4, xStep: 4, yStep: 8),
+        Adam7Pass(xStart: 2, yStart: 0, xStep: 4, yStep: 4),
+        Adam7Pass(xStart: 0, yStart: 2, xStep: 2, yStep: 4),
+        Adam7Pass(xStart: 1, yStart: 0, xStep: 2, yStep: 2),
+        Adam7Pass(xStart: 0, yStart: 1, xStep: 1, yStep: 2),
+    ]
+
+    private static func passExtent(_ size: Int, start: Int, step: Int) -> Int {
+        size > start ? (size - start + step - 1) / step : 0
+    }
+
+    private static func scanlineByteCount(width: Int, bitsPerPixel: Int) throws(ParseError) -> Int {
+        let bits = width.multipliedReportingOverflow(by: bitsPerPixel)
+        guard !bits.overflow else { throw .invalidDataSize }
+        return (bits.partialValue + 7) / 8
+    }
+
+    private static func deinterlace(
+        _ data: [Byte],
+        width: Int,
+        height: Int,
+        colorType: ColorType,
+        bitDepth: Int
+    ) throws(ParseError) -> [Byte] {
+        let bitsPerPixel = colorType.channels * bitDepth
+        let scanlineBytes = try scanlineByteCount(width: width, bitsPerPixel: bitsPerPixel)
+        let total = height.multipliedReportingOverflow(by: scanlineBytes)
+        guard !total.overflow else { throw .invalidDataSize }
+
+        var result: [Byte] = []
+        var offset = 0
+
+        for pass in adam7Passes {
+            let passWidth = passExtent(width, start: pass.xStart, step: pass.xStep)
+            let passHeight = passExtent(height, start: pass.yStart, step: pass.yStep)
+            guard passWidth > 0, passHeight > 0 else { continue }
+
+            let passScanlineBytes = try scanlineByteCount(width: passWidth, bitsPerPixel: bitsPerPixel)
+            let passSize = passHeight.multipliedReportingOverflow(by: passScanlineBytes + 1)
+            guard !passSize.overflow, data.count - offset >= passSize.partialValue else {
+                throw .invalidDataSize
+            }
+
+            if result.isEmpty {
+                result = [Byte](repeating: Byte(0), count: total.partialValue)
+            }
+
+            let passPixels = try reverseFilters(
+                Array(data[offset..<(offset + passSize.partialValue)]),
+                width: passWidth,
+                height: passHeight,
+                colorType: colorType,
+                bitDepth: bitDepth
+            )
+            offset += passSize.partialValue
+
+            (0..<passHeight).forEach { passY in
+                let targetRow = (pass.yStart + passY * pass.yStep) * scanlineBytes
+                let sourceRow = passY * passScanlineBytes
+                (0..<passWidth).forEach { passX in
+                    copyPixel(
+                        from: passPixels,
+                        at: sourceRow,
+                        index: passX,
+                        to: &result,
+                        at: targetRow,
+                        index: pass.xStart + passX * pass.xStep,
+                        bitsPerPixel: bitsPerPixel
+                    )
+                }
+            }
+        }
+
+        return result
+    }
+
+    private static func copyPixel(
+        from source: [Byte],
+        at sourceRow: Int,
+        index sourceIndex: Int,
+        to target: inout [Byte],
+        at targetRow: Int,
+        index targetIndex: Int,
+        bitsPerPixel: Int
+    ) {
+        if bitsPerPixel >= 8 {
+            let bytesPerPixel = bitsPerPixel / 8
+            let sourceStart = sourceRow + sourceIndex * bytesPerPixel
+            let targetStart = targetRow + targetIndex * bytesPerPixel
+            target[targetStart..<(targetStart + bytesPerPixel)] =
+                source[sourceStart..<(sourceStart + bytesPerPixel)]
+        } else {
+            let mask = UInt8((1 << bitsPerPixel) - 1)
+            let sourceBit = sourceIndex * bitsPerPixel
+            let sourceShift = 8 - bitsPerPixel - sourceBit % 8
+            let value = (source[sourceRow + sourceBit / 8].underlying >> sourceShift) & mask
+            let targetBit = targetIndex * bitsPerPixel
+            let targetShift = 8 - bitsPerPixel - targetBit % 8
+            let targetByte = targetRow + targetBit / 8
+            target[targetByte] = Byte(target[targetByte].underlying | (value << targetShift))
         }
     }
 }

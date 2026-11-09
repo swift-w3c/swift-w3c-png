@@ -17,11 +17,32 @@ extension `W3C PNG Boundary Tests` {
             return be32(UInt32(data.count)) + body + be32(W3C_PNG.CRC.checksum(body.map(Byte.init(bitPattern:))))
         }
 
-        private static func png(width: UInt32, height: UInt32, bitDepth: UInt8 = 8, colorType: UInt8 = 0) -> [Byte] {
+        private static func zlibStored(_ data: [UInt8]) -> [UInt8] {
+            var a: UInt32 = 1
+            var b: UInt32 = 0
+            for byte in data {
+                a = (a + UInt32(byte)) % 65521
+                b = (b + a) % 65521
+            }
+            let length = UInt16(data.count)
+            return [0x78, 0x01, 0x01, UInt8(length & 0xFF), UInt8(length >> 8), UInt8(~length & 0xFF), UInt8(~length >> 8)]
+                + data + be32(b << 16 | a)
+        }
+
+        private static func png(
+            width: UInt32,
+            height: UInt32,
+            bitDepth: UInt8 = 8,
+            colorType: UInt8 = 0,
+            compressionMethod: UInt8 = 0,
+            filterMethod: UInt8 = 0,
+            interlaceMethod: UInt8 = 0,
+            scanlines: [UInt8] = [0x00, 0x7F]
+        ) -> [Byte] {
             let signature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
-            let header = be32(width) + be32(height) + [bitDepth, colorType, 0, 0, 0]
-            let idat: [UInt8] = [0x78, 0x01, 0x01, 0x02, 0x00, 0xFD, 0xFF, 0x00, 0x7F, 0x00, 0x81, 0x00, 0x80]
-            return (signature + chunk("IHDR", header) + chunk("IDAT", idat) + chunk("IEND", []))
+            let header =
+                be32(width) + be32(height) + [bitDepth, colorType, compressionMethod, filterMethod, interlaceMethod]
+            return (signature + chunk("IHDR", header) + chunk("IDAT", zlibStored(scanlines)) + chunk("IEND", []))
                 .map(Byte.init(bitPattern:))
         }
 
@@ -43,6 +64,57 @@ extension `W3C PNG Boundary Tests` {
         func `dimensions above two to the thirty-first minus one are an invalid header`() {
             #expect(throws: W3C_PNG.ParseError.invalidIHDR) { try W3C_PNG.parse(Self.png(width: 0x8000_0000, height: 1)) }
             #expect(throws: W3C_PNG.ParseError.invalidIHDR) { try W3C_PNG.parse(Self.png(width: 1, height: 0xFFFF_FFFF)) }
+        }
+
+        @Test
+        func `a compression or filter method other than zero is an invalid header`() {
+            #expect(throws: W3C_PNG.ParseError.invalidIHDR) {
+                try W3C_PNG.parse(Self.png(width: 1, height: 1, compressionMethod: 1))
+            }
+            #expect(throws: W3C_PNG.ParseError.invalidIHDR) {
+                try W3C_PNG.parse(Self.png(width: 1, height: 1, filterMethod: 1))
+            }
+        }
+
+        @Test
+        func `an interlace method other than none or Adam7 is an invalid header`() {
+            #expect(throws: W3C_PNG.ParseError.invalidIHDR) {
+                try W3C_PNG.parse(Self.png(width: 1, height: 1, interlaceMethod: 2))
+            }
+        }
+
+        @Test
+        func `an Adam7 interlaced image decodes to its pixels in row order`() throws {
+            let passes: [UInt8] = [
+                0x00, 1,
+                0x00, 3,
+                0x00, 7, 9,
+                0x00, 2,
+                0x00, 8,
+                0x00, 4, 5, 6,
+            ]
+            let image = try W3C_PNG.parse(Self.png(width: 3, height: 3, interlaceMethod: 1, scanlines: passes))
+            #expect(image.rawPixels == (1...9).map { Byte(bitPattern: $0) })
+        }
+
+        @Test
+        func `an Adam7 interlaced one bit image packs its pixels into rows`() throws {
+            let passes: [UInt8] = [
+                0x00, 0x80,
+                0x00, 0x00,
+                0x00, 0xC0,
+            ]
+            let image = try W3C_PNG.parse(
+                Self.png(width: 2, height: 2, bitDepth: 1, interlaceMethod: 1, scanlines: passes)
+            )
+            #expect(image.rawPixels == [Byte(bitPattern: 0x80), Byte(bitPattern: 0xC0)])
+        }
+
+        @Test
+        func `an Adam7 interlaced image with a missing pass is too short`() {
+            #expect(throws: W3C_PNG.ParseError.invalidDataSize) {
+                try W3C_PNG.parse(Self.png(width: 3, height: 3, interlaceMethod: 1, scanlines: [0x00, 1, 0x00, 3]))
+            }
         }
 
         @Test
