@@ -1,3 +1,5 @@
+internal import Byte
+
 extension W3C_PNG {
 
     public enum ColorType: UInt8, Sendable, Hashable {
@@ -24,5 +26,23 @@ extension W3C_PNG.ColorType {
         case .grayscaleAlpha: 2
         case .rgba: 4
         }
+    }
+}
+
+extension W3C_PNG.ColorType {
+
+    var bitDepths: [Int] {
+        switch self {
+        case .grayscale: [1, 2, 4, 8, 16]
+        case .rgb, .grayscaleAlpha, .rgba: [8, 16]
+        case .indexed: [1, 2, 4, 8]
+        }
+    }
+}
+
+extension W3C_PNG.ColorType {
+
+    var byte: Byte {
+        Byte(rawValue)
     }
 }

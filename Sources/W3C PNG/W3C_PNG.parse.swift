@@ -3,8 +3,6 @@ public import Byte
 
 extension W3C_PNG {
 
-    private static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].map(Byte.init(bitPattern:))
-
     public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
 
         guard data.count >= 8,
@@ -17,6 +15,9 @@ extension W3C_PNG {
         var ihdr: IHDR?
         var idatData: [Byte] = []
         var palette: [PaletteEntry]?
+        var cicp: CICP?
+        var intent: Intent?
+        var gamma: Gamma?
 
         while offset + 12 <= data.count {
             let length = Int(readUInt32BE(data, at: offset))
@@ -39,6 +40,15 @@ extension W3C_PNG {
 
             case "IDAT":
                 idatData.append(contentsOf: data[chunkDataStart..<chunkDataEnd])
+
+            case "cICP" where idatData.isEmpty && cicp == nil:
+                cicp = parseCICP(data[chunkDataStart..<chunkDataEnd])
+
+            case "sRGB" where idatData.isEmpty && intent == nil && length == 1:
+                intent = Intent(rawValue: data[chunkDataStart].underlying)
+
+            case "gAMA" where idatData.isEmpty && gamma == nil && length == 4:
+                gamma = Gamma(scaled: readUInt32BE(data, at: chunkDataStart))
 
             case "IEND":
                 break
@@ -89,14 +99,26 @@ extension W3C_PNG {
                 )
             }
 
-        return Image(
-            width: header.width,
-            height: header.height,
-            colorType: header.colorType,
-            bitDepth: header.bitDepth,
-            rawPixels: rawPixels,
-            palette: palette
-        )
+        do throws(Image.Error) {
+            return try Image(
+                width: header.width,
+                height: header.height,
+                colorType: header.colorType,
+                bitDepth: header.bitDepth,
+                rawPixels: rawPixels,
+                palette: palette,
+                cicp: cicp,
+                sRGB: intent,
+                gamma: gamma
+            )
+        } catch {
+            switch error {
+            case .dimensions: throw .invalidIHDR
+            case .bitDepth: throw .unsupportedBitDepth(header.bitDepth)
+            case .pixels: throw .invalidDataSize
+            case .palette: throw .invalidPalette
+            }
+        }
     }
 }
 
@@ -127,19 +149,7 @@ extension W3C_PNG {
             throw .unsupportedColorType(data[9])
         }
 
-        let validBitDepths: [Int]
-        switch colorType {
-        case .grayscale:
-            validBitDepths = [1, 2, 4, 8, 16]
-
-        case .rgb, .grayscaleAlpha, .rgba:
-            validBitDepths = [8, 16]
-
-        case .indexed:
-            validBitDepths = [1, 2, 4, 8]
-        }
-
-        guard validBitDepths.contains(bitDepth) else {
+        guard colorType.bitDepths.contains(bitDepth) else {
             throw .unsupportedBitDepth(bitDepth)
         }
 
@@ -166,6 +176,17 @@ extension W3C_PNG {
             colorType: colorType,
             isInterlaced: isInterlaced
         )
+    }
+}
+
+extension W3C_PNG {
+    private static func parseCICP(_ data: ArraySlice<Byte>) -> CICP? {
+        guard data.count == 4, data[data.startIndex + 2].underlying == 0,
+            let range = CICP.Range(rawValue: data[data.startIndex + 3].underlying)
+        else {
+            return nil
+        }
+        return CICP(primaries: data[data.startIndex].underlying, transfer: data[data.startIndex + 1].underlying, range: range)
     }
 }
 
@@ -217,7 +238,7 @@ extension W3C_PNG {
             let scanlineStart = y * scanlineWithFilter
             let filterByte = data[scanlineStart].underlying
 
-            guard let filterType = FilterType(rawValue: filterByte) else {
+            guard let filterType = Filter(rawValue: filterByte) else {
                 throw .invalidFilter(data[scanlineStart])
             }
 
@@ -239,59 +260,21 @@ extension W3C_PNG {
     }
 
     private static func applyReverseFilter(
-        _ filter: FilterType,
+        _ filter: Filter,
         scanline: [Byte],
         previous: [Byte],
         bytesPerPixel: Int
     ) -> [Byte] {
         var result = scanline
-
-        switch filter {
-        case .none:
-            break
-
-        case .sub:
-            (bytesPerPixel..<result.count).forEach { i in
-                result[i] = Byte(result[i].underlying &+ result[i - bytesPerPixel].underlying)
-            }
-
-        case .up:
-            result.indices.forEach { i in
-                result[i] = Byte(result[i].underlying &+ previous[i].underlying)
-            }
-
-        case .average:
-            result.indices.forEach { i in
-                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel].underlying) : 0
-                let b = Int(previous[i].underlying)
-                result[i] = Byte(result[i].underlying &+ UInt8((a + b) / 2))
-            }
-
-        case .paeth:
-            result.indices.forEach { i in
-                let a = i >= bytesPerPixel ? Int(result[i - bytesPerPixel].underlying) : 0
-                let b = Int(previous[i].underlying)
-                let c = i >= bytesPerPixel ? Int(previous[i - bytesPerPixel].underlying) : 0
-                result[i] = Byte(result[i].underlying &+ UInt8(paethPredictor(a, b, c)))
-            }
+        guard filter != .none else { return result }
+        result.indices.forEach { i in
+            let hasLeft = i >= bytesPerPixel
+            let left = hasLeft ? result[i - bytesPerPixel].underlying : 0
+            let aboveLeft = hasLeft ? previous[i - bytesPerPixel].underlying : 0
+            let prediction = filter.prediction(left: left, above: previous[i].underlying, aboveLeft: aboveLeft)
+            result[i] = Byte(result[i].underlying &+ prediction)
         }
-
         return result
-    }
-
-    private static func paethPredictor(_ a: Int, _ b: Int, _ c: Int) -> Int {
-        let p = a + b - c
-        let pa = abs(p - a)
-        let pb = abs(p - b)
-        let pc = abs(p - c)
-
-        return if pa <= pb && pa <= pc {
-            a
-        } else if pb <= pc {
-            b
-        } else {
-            c
-        }
     }
 }
 
