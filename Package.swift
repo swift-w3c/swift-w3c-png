@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "W3C PNG", targets: ["W3C PNG"])
     ],
     dependencies: [
+        .package(url: "https://github.com/swift-w3c/swift-w3c.git", branch: "main"),
         .package(
             url: "https://github.com/swift-atoms/swift-standard-library-extensions.git",
             branch: "main"
@@ -33,6 +34,7 @@ let package = Package(
         .target(
             name: "W3C PNG",
             dependencies: [
+                .product(name: "W3C", package: "swift-w3c"),
                 .product(
                     name: "Standard Library Extensions",
                     package: "swift-standard-library-extensions"

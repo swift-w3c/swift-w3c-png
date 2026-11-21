@@ -1,6 +1,7 @@
 public import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public struct PaletteEntry: Sendable, Hashable {
         public let r: Byte

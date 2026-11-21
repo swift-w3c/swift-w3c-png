@@ -1,6 +1,7 @@
 internal import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public enum Intent: UInt8, Sendable, Hashable, CaseIterable {
 
@@ -14,7 +15,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.Intent {
+extension W3C.PNG.Intent {
 
     var byte: Byte {
         Byte(rawValue)

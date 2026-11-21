@@ -1,7 +1,8 @@
 internal import Binary
 public import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public static func parse(_ data: [Byte]) throws(ParseError) -> Image {
 
@@ -122,7 +123,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     private struct IHDR {
         let width: Int
@@ -179,7 +180,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
     private static func parseCICP(_ data: ArraySlice<Byte>) -> CICP? {
         guard data.count == 4, data[data.startIndex + 2].underlying == 0,
             let range = CICP.Range(rawValue: data[data.startIndex + 3].underlying)
@@ -190,7 +191,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
     private static func parsePLTE(_ data: [Byte]) throws(ParseError) -> [PaletteEntry] {
         guard data.count % 3 == 0 && data.count >= 3 && data.count <= 768 else {
             throw .invalidPalette
@@ -207,7 +208,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     private static func reverseFilters(
         _ data: [Byte],
@@ -278,7 +279,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     private struct Adam7Pass {
         let xStart: Int
@@ -394,7 +395,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     private static func readUInt32BE(_ data: [Byte], at offset: Int) -> UInt32 {
         guard let value = UInt32(bytes: data[offset..<offset + 4], endianness: .big) else {

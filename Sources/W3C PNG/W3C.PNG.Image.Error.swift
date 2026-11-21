@@ -1,4 +1,6 @@
-extension W3C_PNG.Image {
+public import W3C
+
+extension W3C.PNG.Image {
 
     public enum Error: Swift::Error, Sendable, Hashable {
 

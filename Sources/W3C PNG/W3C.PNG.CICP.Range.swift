@@ -1,6 +1,7 @@
 internal import Byte
+public import W3C
 
-extension W3C_PNG.CICP {
+extension W3C.PNG.CICP {
 
     public enum Range: UInt8, Sendable, Hashable {
 
@@ -10,7 +11,7 @@ extension W3C_PNG.CICP {
     }
 }
 
-extension W3C_PNG.CICP.Range {
+extension W3C.PNG.CICP.Range {
 
     var byte: Byte {
         Byte(rawValue)

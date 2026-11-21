@@ -1,4 +1,6 @@
-extension W3C_PNG {
+public import W3C
+
+extension W3C.PNG {
 
     public struct Gamma: Sendable, Hashable {
 
@@ -11,7 +13,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.Gamma {
+extension W3C.PNG.Gamma {
 
     public static let sRGB = Self(unchecked: 45455)
 

@@ -1,4 +1,6 @@
-extension W3C_PNG {
+public import W3C
+
+extension W3C.PNG {
 
     public struct CICP: Sendable, Hashable {
 
@@ -16,7 +18,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.CICP {
+extension W3C.PNG.CICP {
 
     public static let sRGB = Self(primaries: 1, transfer: 13)
 

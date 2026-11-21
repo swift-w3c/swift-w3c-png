@@ -28,23 +28,23 @@ extension `W3C PNG Chunk CRC Tests` {
 
         @Test
         func `the Annex D CRC of the ASCII digits one to nine is CBF43926`() {
-            #expect(W3C_PNG.CRC.checksum(Array("123456789".utf8).map(Byte.init(bitPattern:))) == 0xCBF4_3926)
+            #expect(W3C.PNG.CRC.checksum(Array("123456789".utf8).map(Byte.init(bitPattern:))) == 0xCBF4_3926)
         }
 
         @Test
         func `a PNG with correct chunk CRCs decodes`() throws {
-            let image = try W3C_PNG.parse(Self.valid.map(Byte.init(bitPattern:)))
+            let image = try W3C.PNG.parse(Self.valid.map(Byte.init(bitPattern:)))
             #expect(image.rawPixels == [Byte(bitPattern: 0x7F)])
         }
 
         @Test(arguments: [29, 32, 54, 57, 66, 69])
         func `a flipped CRC byte throws crcMismatch`(index: Int) {
-            #expect(throws: W3C_PNG.ParseError.crcMismatch) { try W3C_PNG.parse(Self.flipping(index)) }
+            #expect(throws: W3C.PNG.ParseError.crcMismatch) { try W3C.PNG.parse(Self.flipping(index)) }
         }
 
         @Test(arguments: [12, 20, 37, 49, 62])
         func `a flipped chunk type or data byte throws crcMismatch`(index: Int) {
-            #expect(throws: W3C_PNG.ParseError.crcMismatch) { try W3C_PNG.parse(Self.flipping(index)) }
+            #expect(throws: W3C.PNG.ParseError.crcMismatch) { try W3C.PNG.parse(Self.flipping(index)) }
         }
     }
 }

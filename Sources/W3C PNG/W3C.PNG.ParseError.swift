@@ -1,6 +1,7 @@
 public import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public enum ParseError: Swift::Error, Sendable, Hashable {
 

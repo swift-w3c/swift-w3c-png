@@ -1,6 +1,7 @@
 public import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public struct Image: Sendable, Hashable {
 
@@ -69,9 +70,9 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.Image {
+extension W3C.PNG.Image {
 
-    static func scanlineByteCount(width: Int, colorType: W3C_PNG.ColorType, bitDepth: Int) -> Int? {
+    static func scanlineByteCount(width: Int, colorType: W3C.PNG.ColorType, bitDepth: Int) -> Int? {
         let bits = width.multipliedReportingOverflow(by: colorType.channels * bitDepth)
         guard !bits.overflow, bits.partialValue <= Int.max - 7 else { return nil }
         return (bits.partialValue + 7) / 8

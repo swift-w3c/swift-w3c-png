@@ -1,8 +1,9 @@
 internal import Binary
 public import Byte
 public import RFC_1950
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public static func serialize<Output>(
         _ image: Image,
@@ -55,7 +56,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     static let signature: [Byte] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].map(Byte.init(bitPattern:))
 

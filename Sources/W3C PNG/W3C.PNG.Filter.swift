@@ -1,6 +1,7 @@
 internal import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public enum Filter: UInt8, Sendable, Hashable, CaseIterable {
 
@@ -16,7 +17,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.Filter {
+extension W3C.PNG.Filter {
 
     static func predictor(_ a: Int, _ b: Int, _ c: Int) -> Int {
         let p = a + b - c
@@ -54,7 +55,7 @@ extension W3C_PNG.Filter {
     }
 }
 
-extension W3C_PNG.Filter {
+extension W3C.PNG.Filter {
 
     var byte: Byte {
         Byte(rawValue)

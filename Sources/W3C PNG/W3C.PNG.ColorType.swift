@@ -1,6 +1,7 @@
 internal import Byte
+public import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
 
     public enum ColorType: UInt8, Sendable, Hashable {
 
@@ -16,7 +17,7 @@ extension W3C_PNG {
     }
 }
 
-extension W3C_PNG.ColorType {
+extension W3C.PNG.ColorType {
 
     public var channels: Int {
         switch self {
@@ -29,7 +30,7 @@ extension W3C_PNG.ColorType {
     }
 }
 
-extension W3C_PNG.ColorType {
+extension W3C.PNG.ColorType {
 
     var bitDepths: [Int] {
         switch self {
@@ -40,7 +41,7 @@ extension W3C_PNG.ColorType {
     }
 }
 
-extension W3C_PNG.ColorType {
+extension W3C.PNG.ColorType {
 
     var byte: Byte {
         Byte(rawValue)

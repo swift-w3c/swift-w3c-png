@@ -1,11 +1,12 @@
 internal import Byte
+import W3C
 
-extension W3C_PNG {
+extension W3C.PNG {
     internal enum CRC {
     }
 }
 
-extension W3C_PNG.CRC {
+extension W3C.PNG.CRC {
     private static let table: [UInt32] = (0..<256).map { n in
         (0..<8).reduce(UInt32(n)) { c, _ in
             c & 1 != 0 ? 0xEDB8_8320 ^ (c >> 1) : c >> 1
@@ -13,7 +14,7 @@ extension W3C_PNG.CRC {
     }
 }
 
-extension W3C_PNG.CRC {
+extension W3C.PNG.CRC {
     internal static func checksum(_ bytes: some Swift.Sequence<Byte>) -> UInt32 {
         bytes.reduce(UInt32(0xFFFF_FFFF)) { c, byte in
             table[Int((c ^ UInt32(byte.underlying)) & 0xFF)] ^ (c >> 8)
