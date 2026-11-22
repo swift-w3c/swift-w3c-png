@@ -9,7 +9,7 @@ extension W3C.PNG {
         _ image: Image,
         into output: inout Output,
         filter: Filter.Selection = .adaptive,
-        level: RFC_1951.Level = .balanced
+        level: IETF.RFC.`1951`.Level = .balanced
     ) where Output: RangeReplaceableCollection, Output.Element == Byte {
         output.append(contentsOf: signature)
 
@@ -34,7 +34,7 @@ extension W3C.PNG {
             append(chunk: "PLTE", palette.flatMap { [$0.r, $0.g, $0.b] }, to: &output)
         }
 
-        let compressed = RFC_1950.compress(filtered(image, filter), level: level)
+        let compressed = IETF.RFC.`1950`.compress(filtered(image, filter), level: level)
         var start = compressed.startIndex
         repeat {
             let end = compressed.index(start, offsetBy: chunkLengthLimit, limitedBy: compressed.endIndex) ?? compressed.endIndex
@@ -48,7 +48,7 @@ extension W3C.PNG {
     public static func serialize(
         _ image: Image,
         filter: Filter.Selection = .adaptive,
-        level: RFC_1951.Level = .balanced
+        level: IETF.RFC.`1951`.Level = .balanced
     ) -> [Byte] {
         var output: [Byte] = []
         serialize(image, into: &output, filter: filter, level: level)

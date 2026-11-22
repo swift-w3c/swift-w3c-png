@@ -62,10 +62,10 @@ extension `W3C.PNG.serialize Tests` {
         return result
     }
 
-    static func scanlines(_ file: [Byte]) throws(RFC_1950.Error) -> [Byte] {
+    static func scanlines(_ file: [Byte]) throws(IETF.RFC.`1950`.Error) -> [Byte] {
         let compressed = chunks(file).filter { $0.type == "IDAT" }.flatMap(\.data).map(Byte.init(_:))
         var output: [Byte] = []
-        try RFC_1950.decompress(compressed, into: &output)
+        try IETF.RFC.`1950`.decompress(compressed, into: &output)
         return output
     }
 }
@@ -88,8 +88,8 @@ extension `W3C.PNG.serialize Tests` {
             }
         }
 
-        @Test(arguments: RFC_1951.Level.allCases)
-        func `What is written reads back equal at every compression level`(level: RFC_1951.Level) throws {
+        @Test(arguments: IETF.RFC.`1951`.Level.allCases)
+        func `What is written reads back equal at every compression level`(level: IETF.RFC.`1951`.Level) throws {
             for (colorType, bitDepth) in Tests.formats {
                 let image = try Tests.image(colorType, bitDepth, width: 33, height: 17)
                 #expect(try W3C.PNG.parse(W3C.PNG.serialize(image, level: level)) == image)

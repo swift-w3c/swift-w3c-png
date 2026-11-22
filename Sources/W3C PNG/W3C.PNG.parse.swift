@@ -75,8 +75,8 @@ extension W3C.PNG {
         }
 
         var decompressed: [Byte] = []
-        do throws(RFC_1950.Error) {
-            try RFC_1950.decompress(idatData, into: &decompressed)
+        do throws(IETF.RFC.`1950`.Error) {
+            try IETF.RFC.`1950`.decompress(idatData, into: &decompressed)
         } catch {
             throw .decompressionFailed
         }
